@@ -1,0 +1,295 @@
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans, sans-serif); }
+  .wrap { padding: 1rem 0 2rem; }
+  .ex  { font-size: 10px; padding: 2px 7px; border-radius: 99px; background: var(--color-background-success); color: var(--color-text-success); font-weight: 500; }
+  .pri { font-size: 10px; padding: 2px 7px; border-radius: 99px; background: var(--color-background-warning); color: var(--color-text-warning); font-weight: 500; }
+  .vol { font-size: 10px; padding: 1px 5px; border-radius: 4px; background: var(--color-background-info); color: var(--color-text-info); font-weight: 500; flex-shrink: 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 1.2rem; font-size: 12px; color: var(--color-text-secondary); }
+  .tree { display: flex; flex-direction: column; gap: 6px; }
+  .section { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+  .section-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; user-select: none; background: var(--color-background-secondary); transition: background 0.15s; }
+  .section-header:hover { background: var(--color-background-tertiary); }
+  .section-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+  .section-url { font-size: 11px; color: var(--color-text-tertiary); font-family: var(--font-mono, monospace); }
+  .section-badge { font-size: 10px; padding: 2px 7px; border-radius: 99px; font-weight: 500; flex-shrink: 0; }
+  .chevron { font-size: 10px; color: var(--color-text-tertiary); transition: transform 0.2s; flex-shrink: 0; }
+  .section.open > .section-header > .chevron { transform: rotate(90deg); }
+  .section-body { display: none; padding: 8px 14px 12px; border-top: 0.5px solid var(--color-border-tertiary); background: var(--color-background-primary); }
+  .section.open > .section-body { display: block; }
+  .lvl1 { display: flex; flex-direction: column; gap: 6px; }
+  .l1-item { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); overflow: hidden; }
+  .l1-header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; user-select: none; transition: background 0.15s; }
+  .l1-header:hover { background: var(--color-background-secondary); }
+  .l1-title { font-size: 12px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+  .l1-url { font-size: 10px; color: var(--color-text-tertiary); font-family: var(--font-mono, monospace); }
+  .l1-body { display: none; padding: 6px 12px 10px; border-top: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); }
+  .l1-item.open > .l1-body { display: block; }
+  .l1-item.open > .l1-header > .chevron { transform: rotate(90deg); }
+  .lvl2 { display: flex; flex-direction: column; gap: 3px; }
+  .l2-item { display: flex; align-items: flex-start; gap: 6px; padding: 5px 8px; border-radius: 6px; transition: background 0.12s; }
+  .l2-item:hover { background: var(--color-background-tertiary); }
+  .l2-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: var(--color-border-secondary); margin-top: 5px; }
+  .l2-title { font-size: 12px; color: var(--color-text-primary); flex: 1; }
+  .l2-url { font-size: 10px; color: var(--color-text-tertiary); font-family: var(--font-mono, monospace); }
+  .lvl3 { margin: 3px 0 4px 14px; padding-left: 10px; border-left: 1.5px solid var(--color-border-tertiary); display: flex; flex-direction: column; gap: 2px; }
+  .l3-item { font-size: 11px; color: var(--color-text-secondary); padding: 2px 6px; border-radius: 4px; }
+  .l3-url { font-size: 10px; color: var(--color-text-tertiary); font-family: var(--font-mono, monospace); display: block; }
+  .b-prog { background:#eeecfd;color:#3c3489; }
+  .b-geo  { background:#d8f5eb;color:#085041; }
+  .b-fin  { background:#daeeff;color:#0c447c; }
+  .b-inv  { background:#faeeda;color:#633806; }
+  .b-marche{ background:#fce8f2;color:#72243e; }
+  .b-jur  { background:#f1efe8;color:#2c2c2a; }
+  .b-vente{ background:#eaf3de;color:#27500a; }
+  .b-prat { background:#f1efe8;color:#2c2c2a; }
+</style>
+<div class="wrap">
+  <h2 style="font-size:15px;font-weight:500;color:var(--color-text-primary);margin-bottom:6px;">Arborescence SEO — kaufmanbroad.fr</h2>
+  <p style="font-size:12px;color:var(--color-text-secondary);margin-bottom:14px;">15 756 requetes · 98.8% en Creation · Volume total 38M · Cliquez pour developper</p>
+  <div class="legend">
+    <span style="display:flex;align-items:center;gap:6px;"><span class="ex">Existant</span> page indexee</span>
+    <span style="display:flex;align-items:center;gap:6px;"><span class="pri">Priorite</span> scoring fort</span>
+    <span style="display:flex;align-items:center;gap:6px;"><span class="vol">Vol</span> volume mensuel</span>
+  </div>
+  <div class="tree" id="tree"></div>
+</div>
+<script>
+const data = [
+  { id:'home', label:'Homepage', url:'/', badge:'', badgeCls:'b-prat', children:[] },
+  {
+    id:'prog', label:'Programmes neufs', url:'/achat-immobilier-neuf/', badge:'Core produit Kaufman', badgeCls:'b-prog',
+    children:[
+      { label:'Hub national', url:'/achat-immobilier-neuf/', flag:'existing', children:[
+        { label:'Tous les programmes neufs', url:'/achat-immobilier-neuf/', vol:'', subs:[] },
+        { label:'Recherche par ville / departement', url:'/achat-immobilier-neuf/[region]/[dept]/[ville]/', vol:'', subs:[] },
+        { label:'Compte a neuf (marque)', url:'/compte-a-neuf/', vol:'480', subs:[] },
+        { label:'Trouver un logement neuf', url:'/trouver-un-logement-neuf/', vol:'390', subs:[] },
+        { label:'Programme de parrainage', url:'/parrainage/', vol:'320', subs:[] },
+      ]},
+      { label:'Par type de bien', url:'/achat-immobilier-neuf/type/', flag:'priority', children:[
+        { label:'Appartement neuf', url:'/achat-immobilier-neuf/appartement/', vol:'7 090', subs:['Appartement neuf Paris · /ile-de-france/paris/', 'Studio neuf · /appartement/studio/', 'T2 / T3 / T4 neufs'] },
+        { label:'Maison neuve', url:'/achat-immobilier-neuf/maison/', vol:'', subs:['Maison individuelle neuve','Maison en PSLA · /psla/','Village senior · /senior/'] },
+        { label:'PSLA / Accession sociale', url:'/achat-immobilier-neuf/psla/', vol:'1 560', subs:['Maison en PSLA vol. 1 560','PSLA simulation · /simulation-pas/'] },
+      ]},
+      { label:'Par dispositif / fiscalite', url:'/achat-immobilier-neuf/dispositifs/', flag:'priority', children:[
+        { label:'Pinel / investissement locatif neuf', url:'/achat-immobilier-neuf/pinel/', vol:'', subs:['Programme Pinel', 'Defiscalisation neuf', 'Loi pour investir dans le neuf'] },
+        { label:'PTZ — Pret a taux zero', url:'/achat-immobilier-neuf/ptz/', vol:'15 780', subs:['PTZ conditions 2025 · vol. 15 780','PTZ primo accedant', 'PTZ neuf'] },
+        { label:'BRS — Bail reel solidaire', url:'/achat-immobilier-neuf/brs/', vol:'980', subs:['BRS definition · vol. 780','BRS Paris · vol. 980','BRS plafond ressources · vol. 140','BRS logement social'] },
+        { label:'Action Logement', url:'/achat-immobilier-neuf/action-logement/', vol:'13 430', subs:['Pret action logement condition · vol. 13 430'] },
+      ]},
+      { label:'Par region — IDF', url:'/achat-immobilier-neuf/ile-de-france/', flag:'existing', children:[
+        { label:'Paris (hub)', url:'/achat-immobilier-neuf/ile-de-france/paris/', vol:'~1,1M', subs:['Logement neuf a Paris · vol. 7 090', 'Programme neuf Paris arrondissements'] },
+        { label:'Hauts-de-Seine', url:'/achat-immobilier-neuf/ile-de-france/hauts-de-seine/', vol:'', subs:['Courbevoie · vol. 350','Colombes, Malakoff, Sevres, Chatenay'] },
+        { label:'Seine-Saint-Denis', url:'/achat-immobilier-neuf/ile-de-france/seine-saint-denis/', vol:'', subs:['Pantin, La Courneuve, Le Blanc-Mesnil, Noisy'] },
+        { label:'Seine-et-Marne', url:'/achat-immobilier-neuf/ile-de-france/seine-et-marne/', vol:'', subs:['Melun, Meaux, Lieusaint, Fontainebleau'] },
+        { label:'Essonne, Yvelines, Val-de-Marne', url:'/achat-immobilier-neuf/ile-de-france/[dept]/', vol:'', subs:['Brunoy, Epinay, Yerres, Orly, Velizy'] },
+        { label:'Val-d\'Oise', url:'/achat-immobilier-neuf/ile-de-france/val-doise/', vol:'', subs:['Ermont, Jouy-le-Moutier, Saint-Leu'] },
+      ]},
+      { label:'Par region — province', url:'/achat-immobilier-neuf/[region]/', flag:'existing', children:[
+        { label:'Auvergne-Rhone-Alpes (Lyon, Annecy)', url:'/achat-immobilier-neuf/auvergne-rhone-alpes/', vol:'~500k', subs:['Lyon · vol. 443k','Annecy · vol. 370','Archamps, Poisy, Bourg-Saint-Maurice'] },
+        { label:'Occitanie (Toulouse, Montpellier)', url:'/achat-immobilier-neuf/occitanie/', vol:'~500k', subs:['Toulouse · vol. 418k','Montpellier · vol. 480','Programme neuf Montpellier · vol. 480'] },
+        { label:'PACA (Marseille, Nice, Aix)', url:'/achat-immobilier-neuf/provence-alpes-cote-azur/', vol:'~435k', subs:['Marseille · vol. 310k','Nice · vol. 81k','Aix-en-Provence · vol. 42k'] },
+        { label:'Grand Est (Strasbourg, Reims, Nancy)', url:'/achat-immobilier-neuf/grand-est/', vol:'', subs:['Strasbourg · vol. 74k','Reims, Nancy existants'] },
+        { label:'Hauts-de-France (Lille, Dunkerque)', url:'/achat-immobilier-neuf/hauts-de-france/', vol:'~124k', subs:['Lille · vol. 124k'] },
+        { label:'Bretagne, Normandie, Pays de la Loire', url:'/achat-immobilier-neuf/bretagne/', vol:'', subs:['Nantes · vol. 48k','Rennes · vol. 49k','Paimpol, La Richardais, La Tour-de-Salvagny'] },
+      ]},
+    ]
+  },
+  {
+    id:'geo', label:'Pages locales — Marche immobilier', url:'/immobilier/[ville]/', badge:'6 097 req · 26.7M vol', badgeCls:'b-geo',
+    children:[
+      { label:'Structure page marche local', url:'/immobilier/[ville]/', flag:'priority', children:[
+        { label:'Prix immobilier [Ville]', url:'/immobilier/[ville]/prix/', vol:'variable', subs:['Prix m2 Paris · /immobilier/paris/prix/','Prix m2 Lyon · /immobilier/lyon/prix/','Prix m2 Marseille, Toulouse, Bordeaux, Lille…'] },
+        { label:'Appartement a vendre [Ville]', url:'/immobilier/[ville]/appartement-a-vendre/', vol:'variable', subs:['Bayonne appartement a vendre · vol. 3 940','Paris studio a vendre · vol. 1 180'] },
+        { label:'Maison a vendre [Ville]', url:'/immobilier/[ville]/maison-a-vendre/', vol:'variable', subs:['Maison a vendre Selestat · vol. 1 320','Maison a vendre Tournefeuille · vol. 2 340','Maison a vendre Villejuif · vol. 650'] },
+        { label:'Investissement locatif [Ville]', url:'/immobilier/[ville]/investissement-locatif/', vol:'variable', subs:['Investissement locatif Toulouse · vol. 1 120','Investissement locatif Montpellier · vol. 640','Investissement locatif Lille · vol. 320'] },
+      ]},
+      { label:'Top villes prioritaires', url:'/immobilier/', flag:'priority', children:[
+        { label:'Paris (hub marche + arrondissements)', url:'/immobilier/paris/', vol:'1,17M', subs:['Par arrondissement · /paris/[1er-20e]/','Prix m2 quartier · vol. 2 710','Studio a vendre Paris · vol. 1 180'] },
+        { label:'Lyon', url:'/immobilier/lyon/', vol:'443k', subs:['Prix m2 Lyon · vol. 140k+','Appartement vendre Lyon · vol. 54k','Programme neuf Lyon'] },
+        { label:'Toulouse', url:'/immobilier/toulouse/', vol:'418k', subs:['Maison a vendre Tournefeuille · vol. 2 340','Services Reynerie · vol. 410'] },
+        { label:'Marseille', url:'/immobilier/marseille/', vol:'310k', subs:['Prix metre carre Marseille · vol. 590','Appartement Marseille'] },
+        { label:'Orleans', url:'/immobilier/orleans/', vol:'341k', subs:['Volume eleve - opportunite forte'] },
+        { label:'Bordeaux, Lille, Montpellier, Nice', url:'/immobilier/[ville]/', vol:'330k+', subs:['Bordeaux · vol. 122k','Lille · vol. 124k','Nice · vol. 81k','Montpellier · vol. 83k'] },
+        { label:'Strasbourg, Rennes, Nantes, Dijon', url:'/immobilier/[ville]/', vol:'240k+', subs:['Strasbourg · vol. 74k','Rennes · vol. 49k','Nantes · vol. 48k','Dijon · vol. 69k'] },
+        { label:'Aix-en-Provence, Metz, Saint-Cloud', url:'/immobilier/[ville]/', vol:'160k+', subs:['Aix-en-Prov. · vol. 42k','Metz · vol. 41k','Saint-Cloud · vol. 76k'] },
+      ]},
+      { label:'Par departement / quartier', url:'/immobilier/[dept]/', flag:'', children:[
+        { label:'Ivry-sur-Seine, Evry, Valenton', url:'/immobilier/[ville]/', vol:'435k', subs:['Ivry · vol. 167k','Evry · vol. 202k','Valenton · vol. 66k'] },
+        { label:'Stations / lieux touristiques', url:'/immobilier/[lieu]/', vol:'', subs:['Belle-ile · vol. 70','Pays Basque (immobilier) · vol. 480','Saint Prix · vol. 780'] },
+      ]},
+    ]
+  },
+  {
+    id:'fin', label:'Financement immobilier', url:'/financement/', badge:'787 req · 1,04M vol', badgeCls:'b-fin',
+    children:[
+      { label:'Simulateurs (outils cles)', url:'/financement/simulateurs/', flag:'priority', children:[
+        { label:'Simulateur frais de notaire', url:'/financement/simulateurs/frais-notaire/', vol:'94 420', subs:['Simulateur achat maison · vol. 94 420 (top vol.)','Simulateur succession · vol. 6 860','Simulation don avec usufruit · vol. 5 860','Frais notaire neuf · vol. 4 830','Frais notaire terrain · vol. 170','Frais notaire garage · vol. 390'] },
+        { label:'Simulateur pret immobilier', url:'/financement/simulateurs/pret-immobilier/', vol:'331 880', subs:['Simulation pret sans inscription · vol. 331 880 (record absolu)','Calcul interet PEL · vol. 2 490','Plafond livret CEL · vol. 13 790'] },
+        { label:'Simulateur capacite d\'emprunt', url:'/financement/simulateurs/capacite-emprunt/', vol:'', subs:['Preter sans apport · vol. 760','Location-vente sans apport · vol. 390'] },
+      ]},
+      { label:'Pret immobilier', url:'/financement/pret-immobilier/', flag:'', children:[
+        { label:'Guide pret immobilier', url:'/financement/pret-immobilier/guide/', vol:'', subs:['Credit immobilier de France mon compte · vol. 800','Pret familial achat immobilier · vol. 1 980','Faire credit sans CDI · vol. 160','Parrainage meilleur taux · vol. 390'] },
+        { label:'Pret sans apport', url:'/financement/pret-immobilier/sans-apport/', vol:'760', subs:['Peut-on acheter sans apport · vol. 760','Location-vente sans apport · vol. 390'] },
+        { label:'Assurance emprunteur', url:'/financement/pret-immobilier/assurance-emprunteur/', vol:'210', subs:['Loi Lemoine definition · vol. 210'] },
+        { label:'Courtage immobilier', url:'/financement/courtage/', vol:'', subs:['Courtier immobilier guide','Comparatif courtiers'] },
+      ]},
+      { label:'Aides & dispositifs', url:'/financement/aides/', flag:'', children:[
+        { label:'PTZ primo-accedant', url:'/financement/aides/ptz/', vol:'15 780', subs:['PTZ avril 2025 · vol. 15 780','Pret immobilier primo accedant · vol. 220'] },
+        { label:'Action Logement', url:'/financement/aides/action-logement/', vol:'13 430', subs:['Pret action logement conditions · vol. 13 430'] },
+        { label:'Pret CAF', url:'/financement/aides/pret-caf/', vol:'9 900', subs:['Comment faire pour un pret CAF · vol. 9 900'] },
+        { label:'PSLA / Accession sociale', url:'/financement/aides/psla/', vol:'1 080', subs:['Simulation PAS · vol. 1 080','Maison accession propriete · vol. 210'] },
+        { label:'BRS / Bail reel solidaire', url:'/financement/aides/brs/', vol:'980', subs:['BRS definition · vol. 780','BRS Paris · vol. 980','BRS logement social · vol. 220'] },
+      ]},
+    ]
+  },
+  {
+    id:'inv', label:'Investissement locatif', url:'/investissement-locatif/', badge:'877 req · 647k vol', badgeCls:'b-inv',
+    children:[
+      { label:'Guide investissement locatif', url:'/investissement-locatif/guide/', flag:'priority', children:[
+        { label:'Investissement locatif (hub)', url:'/investissement-locatif/', vol:'', subs:['Synonyme d\'investir · vol. 650','Investissement socialement responsable · vol. 620','Investir et defiscaliser · vol. 960','Investir dans Paris · vol. 2 510'] },
+        { label:'Par ville', url:'/investissement-locatif/[ville]/', vol:'', subs:['Investissement locatif Toulouse · vol. 1 120','Investissement locatif Montpellier · vol. 640','Investissement locatif Lille · vol. 320','Investissement locatif ville · vol. 140'] },
+        { label:'Rentabilite & calculs', url:'/investissement-locatif/rentabilite/', vol:'', subs:['Calcul rentabilite locative','Rendement locatif brut / net','Investissement durable · vol. 320'] },
+      ]},
+      { label:'Dispositifs de defiscalisation', url:'/investissement-locatif/dispositifs/', flag:'', children:[
+        { label:'Pinel / Pinel+', url:'/investissement-locatif/dispositifs/pinel/', vol:'', subs:['Loi Pinel plafonds','Pinel zones eligibles','Defiscalisation immobilier'] },
+        { label:'Malraux', url:'/investissement-locatif/dispositifs/malraux/', vol:'730', subs:['Investir en Malraux · vol. 730'] },
+        { label:'Nue-propriete', url:'/investissement-locatif/dispositifs/nue-propriete/', vol:'250', subs:['Vente bien en usufruit · vol. 250','Simulation donation usufruit · vol. 5 860'] },
+        { label:'SCPI', url:'/investissement-locatif/dispositifs/scpi/', vol:'570', subs:['Investissement SCPI immobilier · vol. 570'] },
+        { label:'Prestige investissement', url:'/investissement-locatif/prestige/', vol:'480', subs:['Prestige investissement · vol. 480','Smart investissement · vol. 480'] },
+      ]},
+    ]
+  },
+  {
+    id:'marche', label:'Marche immobilier & Prix', url:'/marche-immobilier/', badge:'1 266 req · 603k vol', badgeCls:'b-marche',
+    children:[
+      { label:'Prix m2 par ville', url:'/marche-immobilier/prix-m2/', flag:'priority', children:[
+        { label:'Prix au m2 (hub national)', url:'/marche-immobilier/prix-m2/', vol:'2 710', subs:['Prix m2 par quartier · vol. 2 710','Prix m2 France carte · vol. 1 370'] },
+        { label:'Prix m2 Paris', url:'/marche-immobilier/prix-m2/paris/', vol:'', subs:['Prix immobilier Paris notaire · vol. 480','Studio a vendre Paris · vol. 1 180'] },
+        { label:'Prix m2 [ville] — Top 20', url:'/marche-immobilier/prix-m2/[ville]/', vol:'variable', subs:['Lyon · vol. 143k','Toulouse · vol. 418k','Marseille · vol. 310k','Vannes · vol. 260','Montrouge · vol. 1 170','Saint-Ouen · vol. 620','Toulon · vol. 960','Montpellier · vol. 90'] },
+      ]},
+      { label:'Evolution du marche', url:'/marche-immobilier/evolution/', flag:'', children:[
+        { label:'Evolution prix immobilier', url:'/marche-immobilier/evolution/prix/', vol:'650', subs:['Evolution prix · vol. 650','Compte immobilier · vol. 390'] },
+        { label:'Tendances & actualite', url:'/marche-immobilier/tendances/', vol:'', subs:['Maison a vendre Belle-ile · vol. 70','Maison a vendre Le Perche · vol. 640'] },
+      ]},
+    ]
+  },
+  {
+    id:'achat', label:'Guide achat immobilier', url:'/achat-immobilier/', badge:'2 922 req · 2,59M vol', badgeCls:'b-prog',
+    children:[
+      { label:'Processus d\'achat', url:'/achat-immobilier/processus/', flag:'priority', children:[
+        { label:'Etapes de l\'achat immobilier', url:'/achat-immobilier/processus/etapes/', vol:'', subs:['Showroom vente privee · vol. 390','Maison a vendre sociale · vol. 1 300'] },
+        { label:'Estimation appartement', url:'/achat-immobilier/processus/estimation/', vol:'90 130', subs:['Estimation appartement vente · vol. 90 130 (top 2)','Estimation prix terrain · vol. 3 210','Estimation 9 lettres · vol. 480'] },
+        { label:'Frais & simulateurs', url:'/achat-immobilier/processus/frais/', vol:'94 420', subs:['Simulateur frais notaire achat maison · vol. 94 420','Frais notaire achat immobilier neuf · vol. 4 830'] },
+      ]},
+      { label:'Types de biens', url:'/achat-immobilier/types/', flag:'', children:[
+        { label:'Appartement a vendre', url:'/achat-immobilier/types/appartement/', vol:'', subs:['Bayonne appartement a vendre · vol. 3 940','AR Studio 2 (marque) · vol. 320'] },
+        { label:'Maison a vendre', url:'/achat-immobilier/types/maison/', vol:'', subs:['Maison Tournefeuille · vol. 2 340','Maison Selestat · vol. 1 320','Maison Villejuif · vol. 650','Maison Viry-Chatillon · vol. 140'] },
+        { label:'Immeuble', url:'/achat-immobilier/types/immeuble/', vol:'390', subs:['Immeuble Central Seine · vol. 390'] },
+        { label:'Sur mesure / VEFA', url:'/achat-immobilier/types/vefa/', vol:'', subs:['Achat en VEFA guide','Contrat de reservation'] },
+      ]},
+      { label:'Agences & promoteurs', url:'/achat-immobilier/agences/', flag:'', children:[
+        { label:'Vente publique / domaine', url:'/achat-immobilier/agences/vente-publique/', vol:'1 900', subs:['Vente public domaine · vol. 1 900'] },
+        { label:'Site de vente de maisons', url:'/achat-immobilier/agences/sites/', vol:'420', subs:['Se loger · vol. 480','Maison a vendre se loger · vol. 480'] },
+        { label:'Vente privee immobilier', url:'/achat-immobilier/agences/vente-privee/', vol:'20 680', subs:['Vente privee immobilier · vol. 20 680','Titre de propriete · vol. inclus'] },
+        { label:'Lamy (agence partenaire)', url:'/achat-immobilier/agences/lamy/', vol:'9 610', subs:['Lamy mon compte client · vol. 9 610','Lamy Pau · vol. 320','Lamy Montpellier Odysseum · vol. 30'] },
+        { label:'Bailleur social / Grand Lyon Habitat', url:'/achat-immobilier/agences/bailleur-social/', vol:'780', subs:['Grand Lyon Habitat mon compte · vol. 780'] },
+      ]},
+    ]
+  },
+  {
+    id:'vente', label:'Vente immobiliere', url:'/vendre/', badge:'297 req · 140k vol', badgeCls:'b-vente',
+    children:[
+      { label:'Mettre en vente', url:'/vendre/mettre-en-vente/', flag:'', children:[
+        { label:'Estimation bien a vendre', url:'/vendre/estimation/', vol:'90 130', subs:['Estimation appartement vente · vol. 90 130','Estimation prix terrain · vol. 3 210'] },
+        { label:'Annonces & diffusion', url:'/vendre/annonces/', vol:'', subs:['Se loger Toulouse · vol. 980','Maison a vendre se loger · vol. 480','Site de vente de maison · vol. 420'] },
+      ]},
+      { label:'Diagnostics obligatoires', url:'/vendre/diagnostics/', flag:'', children:[
+        { label:'Guide diagnostics immobiliers', url:'/vendre/diagnostics/guide/', vol:'9 490', subs:['Diagnostic pour vendre une maison · vol. 9 490','Loi Carrez c\'est quoi · vol. 1 950','Dossier amiante 3 lettres · vol. 320','DPE, diagnostics 6 lettres · vol. 480'] },
+      ]},
+      { label:'Plus-value & fiscalite vente', url:'/vendre/plus-value/', flag:'', children:[
+        { label:'Impot vente immobiliere', url:'/vendre/plus-value/impot/', vol:'18 940', subs:['Impot vente immobiliere · vol. 18 940','Vendre un bien immobilier (declaration) · vol. 490','Vente residence principale plus-value · vol. 70'] },
+      ]},
+    ]
+  },
+  {
+    id:'fiscal', label:'Fiscalite & Juridique', url:'/fiscalite/', badge:'800 req · 507k vol', badgeCls:'b-jur',
+    children:[
+      { label:'Fiscalite immobiliere', url:'/fiscalite/', flag:'', children:[
+        { label:'Taxe fonciere', url:'/fiscalite/taxe-fonciere/', vol:'11 500', subs:['Comment est calculee la taxe fonciere · vol. 11 500','Qui paye taxe habitation · vol. 1 290','Comment demander exoneration · vol. 1 830'] },
+        { label:'Frais de notaire', url:'/fiscalite/frais-notaire/', vol:'6 860', subs:['Frais notaire succession · vol. 6 860','Frais notaire neuf · vol. 4 830','Frais notaire terrain constructible · vol. 170'] },
+        { label:'Declaration & impots', url:'/fiscalite/declaration/', vol:'', subs:['Comment declarer bien immobilier aux impots · vol. 3 090','Declaration occupation bien · vol. 490','Definition revenu foncier · vol. 480','Vendre un bien immobilier (declar.) · vol. 490'] },
+      ]},
+      { label:'Juridique & copropriete', url:'/juridique/', flag:'', children:[
+        { label:'Notaire & actes', url:'/juridique/notaire/', vol:'', subs:['Prix notaire Paris · vol. 480','Compromis de vente annulation · vol. 730','Signature compromis notaire · vol. 320'] },
+        { label:'Copropriete', url:'/juridique/copropriete/', vol:'1 600', subs:['Horaire pour faire des travaux · vol. 1 600','Copropriete changement de syndic · vol. 90'] },
+        { label:'Succession & donation', url:'/juridique/succession/', vol:'1 470', subs:['Vente avant deces usufruitier · vol. 1 470','Simulateur droit succession · vol. 140','Comment sortir indivision · vol. 340','Simulateur donation usufruit · vol. 5 860'] },
+        { label:'Statuts & personnes (bailleur, etc.)', url:'/juridique/statuts/', vol:'530', subs:['Qu\'est-ce qu\'un bailleur · vol. 530'] },
+      ]},
+      { label:'Urbanisme & reglementation', url:'/urbanisme/', flag:'', children:[
+        { label:'PLU & zonage', url:'/urbanisme/plu/', vol:'', subs:['PLU definition · vol. 590','Consulter PLU commune · vol. 930','Zone QPV ANRU · vol. 110','PLU modification · vol. 530','SDP surface · vol. 1 900'] },
+        { label:'Permis de construire', url:'/urbanisme/permis-construire/', vol:'960', subs:['Prix architecte permis · vol. 960','Surface permis construire · vol. 730','Deposer permis sans architecte · vol. 110'] },
+        { label:'Cadastre & valeur locative', url:'/urbanisme/cadastre/', vol:'960', subs:['Parcelle constructible · vol. 960','Location prix m2 par ville · vol. 110'] },
+      ]},
+    ]
+  },
+  {
+    id:'travaux', label:'Construction & Travaux', url:'/travaux/', badge:'433 req · 293k vol', badgeCls:'b-prat',
+    children:[
+      { label:'Construction maison', url:'/travaux/construction/', flag:'', children:[
+        { label:'Guide construction maison', url:'/travaux/construction/guide/', vol:'460', subs:['Construction prix · vol. 460','Village senior maison individuelle · vol. 210'] },
+        { label:'Normes & DPE', url:'/travaux/normes/', vol:'', subs:['DAAF logement · vol. 390','PMR definition · vol. 110','Detecteur fumee ou le mettre · vol. 4 730'] },
+      ]},
+      { label:'Renovation & travaux', url:'/travaux/renovation/', flag:'', children:[
+        { label:'Horaires travaux copropriete', url:'/travaux/renovation/horaires/', vol:'1 010', subs:['Heure pour faire des travaux · vol. 1 010','Confiance travaux · vol. 390','Compte prorata BTP · vol. 310'] },
+        { label:'Isolation & materiaux', url:'/travaux/renovation/isolation/', vol:'1 900', subs:['Isolation future · vol. 1 900','Materiaux et equipements · vol. 54'] },
+        { label:'Prix renovation', url:'/travaux/renovation/prix/', vol:'140', subs:['Prix renovation cuisine · vol. 140'] },
+      ]},
+    ]
+  },
+  {
+    id:'deco', label:'Decoration & Amenagement exterieur', url:'/deco/', badge:'438 req · 1,07M vol', badgeCls:'b-prat',
+    children:[
+      { label:'Exterieur & jardin', url:'/deco/exterieur/', flag:'', children:[
+        { label:'Terrasse vs balcon vs loggia', url:'/deco/exterieur/terrasse-balcon/', vol:'4 570', subs:['Difference terrasse et balcon · vol. 2 570','Loggia ou balcon · vol. 2 000'] },
+        { label:'Jardins de programmes (contenu)', url:'/deco/exterieur/jardins/', vol:'480', subs:['Les 3 terrasses (residence) · vol. 480','Les jardins du Littoral · vol. 320','Jardin Jacob Kaplan · vol. 480'] },
+        { label:'Petite maison avec jardin', url:'/deco/exterieur/petite-maison-jardin/', vol:'530', subs:['Petite maison avec jardin Var · vol. 530'] },
+      ]},
+      { label:'Decoration interieure', url:'/deco/interieure/', flag:'', children:[
+        { label:'Amenagement interieur', url:'/deco/interieure/amenagement/', vol:'', subs:['Maison a vendre Gondecourt (residence) · vol. 320'] },
+      ]},
+    ]
+  },
+  {
+    id:'prat', label:'Pages transversales', url:'/', badge:'', badgeCls:'b-prat',
+    children:[
+      { label:'Espace client / Mon compte', url:'/mon-compte/', flag:'existing', children:[
+        { label:'Mon espace client Kaufman', url:'/mon-compte/', vol:'', subs:[] },
+        { label:'Oxia mon compte', url:'/oxia-mon-compte/', vol:'340', subs:['Oxia mon compte (outil interne) · vol. 340'] },
+      ]},
+      { label:'Contact & agences', url:'/contact/', flag:'existing', children:[] },
+      { label:'Qui sommes-nous / Promoteur', url:'/kaufman-broad/', flag:'existing', children:[
+        { label:'Kaufman & Broad promoteur', url:'/kaufman-broad/', vol:'', subs:['Immeuble Central Seine (programme marque)','Bonaparte promotion Pantin · vol. 530'] },
+        { label:'Programme cinema Sartrouville', url:'/programme-cinema-sartrouville/', vol:'480', subs:['Programme Renaissance · vol. 320'] },
+      ]},
+      { label:'Demenagement & installation', url:'/demenagement/', flag:'', children:[
+        { label:'Guide demenagement', url:'/demenagement/guide/', vol:'1 990', subs:['Espace sante des iles Vannes · vol. 480','Maison a vendre (se-loger) · vol. 480'] },
+      ]},
+      { label:'FAQ / Lexique immobilier', url:'/lexique/', flag:'priority', children:[] },
+      { label:'Simulation / Devis en ligne', url:'/simulation/', flag:'priority', children:[] },
+    ]
+  },
+];
+
+function badge(f){if(f==='existing')return'<span class="ex">Existant</span>';if(f==='priority')return'<span class="pri">Priorite</span>';return '';}
+function l3(subs){if(!subs||!subs.length)return'';return'<div class="lvl3">'+subs.map(s=>{const p=s.split(' · ');return`<div class="l3-item">${p[0]}${p[1]?`<span class="l3-url">${p[1]}</span>`:''}</div>`;}).join('')+'</div>';}
+function l2(ch){return ch.map(c=>`<div class="l2-item"><span class="l2-dot"></span><span class="l2-title">${c.label}</span>${c.vol?`<span class="vol">${c.vol}</span>`:''}<span class="l2-url">${c.url}</span></div>${l3(c.subs)}`).join('');}
+function l1(ch){return ch.map(c=>{const id='l1_'+Math.random().toString(36).slice(2);const h2=c.children&&c.children.length;return`<div class="l1-item" id="${id}"><div class="l1-header" onclick="tog('${id}')"><span class="chevron">&#9658;</span><span class="l1-title">${c.label}</span>${badge(c.flag)}<span class="l1-url">${c.url}</span></div>${h2?`<div class="l1-body"><div class="lvl2">${l2(c.children)}</div></div>`:''}</div>`;}).join('');}
+function build(){const tree=document.getElementById('tree');data.forEach(s=>{const id='sec_'+s.id;const hc=s.children&&s.children.length;const el=document.createElement('div');el.className='section';el.id=id;el.innerHTML=`<div class="section-header" onclick="togSec('${id}')"><span class="chevron">&#9658;</span><span class="section-title">${s.label}</span>${s.badge?`<span class="section-badge ${s.badgeCls}">${s.badge}</span>`:''}<span class="section-url">${s.url}</span></div>${hc?`<div class="section-body"><div class="lvl1">${l1(s.children)}</div></div>`:''}`;tree.appendChild(el);});}
+function togSec(id){document.getElementById(id).classList.toggle('open');}
+function tog(id){document.getElementById(id).classList.toggle('open');}
+build();
+['sec_prog','sec_geo','sec_fin'].forEach(id=>document.getElementById(id).classList.add('open'));
+</script>
